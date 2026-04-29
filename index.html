@@ -54,6 +54,13 @@
     margin-top: 18px;
   }
 
+  .directions {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #4b5563;
+    margin-top: 8px;
+  }
+
   .icon-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -201,6 +208,25 @@
     cursor: pointer;
   }
 
+  .next-btn {
+    display: none;
+    width: 82px;
+    height: 82px;
+    min-height: 82px;
+    margin: 18px auto 0;
+    background: #52b788;
+    color: white;
+    font-size: 2.5rem;
+    border-radius: 50%;
+    padding: 0;
+  }
+
+  .next-btn.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .answer-btn:active,
   .icon-btn:active,
   .mode-btn:active,
@@ -208,19 +234,6 @@
   .next-btn:active,
   .home-btn:active {
     transform: scale(0.96);
-  }
-
-  .next-btn {
-    display: none;
-    width: 100%;
-    max-width: 620px;
-    margin: 18px auto 0;
-    background: #52b788;
-    color: white;
-  }
-
-  .next-btn.show {
-    display: block;
   }
 
   .feedback {
@@ -252,21 +265,16 @@
       transform: scale(0.2);
       opacity: 0;
     }
+
     35% {
       transform: scale(1.25);
       opacity: 1;
     }
+
     100% {
       transform: scale(1);
       opacity: 0;
     }
-  }
-
-  .directions {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #4b5563;
-    margin-top: 8px;
   }
 
   @media (max-width: 600px) {
@@ -353,7 +361,7 @@
 
       <div class="answer-grid" id="answerGrid"></div>
 
-      <button class="next-btn" id="nextBtn" onclick="newProblem()">Next Problem</button>
+      <button class="next-btn" id="nextBtn" onclick="newProblem()">➡️</button>
     </div>
   </div>
 
@@ -368,7 +376,7 @@
   let selectedMode = "";
   let currentAnswer = 0;
   let score = 0;
-  let answered = false;
+  let answeredCorrectly = false;
 
   const iconGrid = document.getElementById("iconGrid");
   const startBtn = document.getElementById("startBtn");
@@ -480,7 +488,7 @@
   }
 
   function newProblem() {
-    answered = false;
+    answeredCorrectly = false;
     nextBtn.classList.remove("show");
     clearTensFrame();
 
@@ -501,21 +509,21 @@
   }
 
   function checkAnswer(choice) {
-    if (answered) return;
-
-    answered = true;
+    if (answeredCorrectly) return;
 
     if (choice === currentAnswer) {
+      answeredCorrectly = true;
       score++;
       scoreDisplay.textContent = score;
+
       showFeedback("⭐", "star");
+
+      setTimeout(() => {
+        nextBtn.classList.add("show");
+      }, 700);
     } else {
       showFeedback("✖", "wrong");
     }
-
-    setTimeout(() => {
-      nextBtn.classList.add("show");
-    }, 700);
   }
 
   function showFeedback(symbol, type) {

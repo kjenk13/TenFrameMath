@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tens Frame Math</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #e8f7ff, #fff4d6);
+    color: #243447;
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+
+  .screen {
+    display: none;
+  }
+
+  .screen.active {
+    display: block;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.4rem;
+    margin: 20px 0 10px;
+    color: #22577a;
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #386641;
+    margin-top: 25px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    margin-top: 18px;
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .icon-btn {
+    font-size: 2.5rem;
+    border: 4px solid transparent;
+    border-radius: 20px;
+    background: #f1f8ff;
+    min-height: 78px;
+    cursor: pointer;
+  }
+
+  .icon-btn.selected {
+    border-color: #ffb703;
+    background: #fff2b8;
+    transform: scale(1.05);
+  }
+
+  .mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 520px;
+    margin: 20px auto 0;
+  }
+
+  .mode-btn,
+  .start-btn,
+  .home-btn,
+  .next-btn {
+    border: none;
+    border-radius: 20px;
+    padding: 18px;
+    font-size: 1.35rem;
+    font-weight: bold;
+    cursor: pointer;
+    min-height: 64px;
+  }
+
+  .mode-btn {
+    background: #90e0ef;
+    color: #023047;
+  }
+
+  .mode-btn.selected {
+    background: #219ebc;
+    color: white;
+  }
+
+  .start-btn {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    margin: 24px auto 0;
+    background: #52b788;
+    color: white;
+  }
+
+  .start-btn:disabled {
+    background: #b7b7b7;
+    cursor: not-allowed;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .small-info {
+    font-size: 1.1rem;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .home-btn {
+    background: #ffd166;
+    color: #243447;
+    padding: 12px 16px;
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .tens-frame {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 620px;
+    margin: 12px auto 22px;
+    background: #22577a;
+    padding: 12px;
+    border-radius: 22px;
+  }
+
+  .frame-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    background: white;
+    border: 3px solid #d7e3fc;
+    font-size: 2.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .frame-cell.filled {
+    background: #fff3b0;
+  }
+
+  .problem {
+    text-align: center;
+    font-size: 2.8rem;
+    font-weight: bold;
+    margin: 12px 0 20px;
+    color: #1d3557;
+  }
+
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .answer-btn {
+    border: none;
+    border-radius: 18px;
+    background: #a8dadc;
+    color: #1d3557;
+    font-size: 2rem;
+    font-weight: bold;
+    min-height: 70px;
+    cursor: pointer;
+  }
+
+  .answer-btn:active,
+  .icon-btn:active,
+  .mode-btn:active,
+  .start-btn:active,
+  .next-btn:active,
+  .home-btn:active {
+    transform: scale(0.96);
+  }
+
+  .next-btn {
+    display: none;
+    width: 100%;
+    max-width: 620px;
+    margin: 18px auto 0;
+    background: #52b788;
+    color: white;
+  }
+
+  .next-btn.show {
+    display: block;
+  }
+
+  .feedback {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .feedback.show {
+    display: flex;
+    animation: pop 0.8s ease forwards;
+  }
+
+  .feedback.star {
+    color: #ffb703;
+  }
+
+  .feedback.wrong {
+    color: #d62828;
+  }
+
+  @keyframes pop {
+    0% {
+      transform: scale(0.2);
+      opacity: 0;
+    }
+    35% {
+      transform: scale(1.25);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  .directions {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #4b5563;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .app {
+      padding: 12px;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .icon-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .mode-buttons {
+      grid-template-columns: 1fr;
+    }
+
+    .problem {
+      font-size: 2.3rem;
+    }
+
+    .answer-grid {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .answer-btn {
+      font-size: 1.5rem;
+      min-height: 56px;
+      border-radius: 14px;
+    }
+
+    .frame-cell {
+      font-size: 1.8rem;
+      border-radius: 10px;
+    }
+
+    .tens-frame {
+      gap: 7px;
+      padding: 9px;
+    }
+
+    .feedback {
+      font-size: 6rem;
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <div id="homeScreen" class="screen active">
+    <h1>Tens Frame Math</h1>
+    <p class="directions">Choose an icon, then choose addition or subtraction.</p>
+
+    <div class="card">
+      <h2>Choose Your Icon</h2>
+      <div class="icon-grid" id="iconGrid"></div>
+
+      <h2>Choose Practice</h2>
+      <div class="mode-buttons">
+        <button class="mode-btn" id="additionBtn" onclick="selectMode('addition')">Addition</button>
+        <button class="mode-btn" id="subtractionBtn" onclick="selectMode('subtraction')">Subtraction</button>
+      </div>
+
+      <button class="start-btn" id="startBtn" onclick="startGame()" disabled>Start</button>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="screen">
+    <div class="top-bar">
+      <button class="home-btn" onclick="goHome()">Home</button>
+      <div class="small-info" id="modeLabel">Addition</div>
+      <div class="small-info">Correct: <span id="score">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="tens-frame" id="tensFrame"></div>
+
+      <div class="problem" id="problemText">2 + 3 = ____</div>
+
+      <div class="answer-grid" id="answerGrid"></div>
+
+      <button class="next-btn" id="nextBtn" onclick="newProblem()">Next Problem</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<script>
+  const icons = ["⭐", "🍎", "🦄", "🐶", "🐱", "🐸", "🌈", "🚀", "🦕", "🍕", "⚽", "🧁"];
+
+  let selectedIcon = "";
+  let selectedMode = "";
+  let currentAnswer = 0;
+  let score = 0;
+  let answered = false;
+
+  const iconGrid = document.getElementById("iconGrid");
+  const startBtn = document.getElementById("startBtn");
+  const additionBtn = document.getElementById("additionBtn");
+  const subtractionBtn = document.getElementById("subtractionBtn");
+  const homeScreen = document.getElementById("homeScreen");
+  const gameScreen = document.getElementById("gameScreen");
+  const tensFrame = document.getElementById("tensFrame");
+  const problemText = document.getElementById("problemText");
+  const answerGrid = document.getElementById("answerGrid");
+  const feedback = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextBtn");
+  const scoreDisplay = document.getElementById("score");
+  const modeLabel = document.getElementById("modeLabel");
+
+  function buildIconChoices() {
+    iconGrid.innerHTML = "";
+
+    icons.forEach(icon => {
+      const button = document.createElement("button");
+      button.className = "icon-btn";
+      button.textContent = icon;
+      button.onclick = () => selectIcon(icon, button);
+      iconGrid.appendChild(button);
+    });
+  }
+
+  function selectIcon(icon, button) {
+    selectedIcon = icon;
+
+    document.querySelectorAll(".icon-btn").forEach(btn => {
+      btn.classList.remove("selected");
+    });
+
+    button.classList.add("selected");
+    checkStartReady();
+  }
+
+  function selectMode(mode) {
+    selectedMode = mode;
+
+    additionBtn.classList.toggle("selected", mode === "addition");
+    subtractionBtn.classList.toggle("selected", mode === "subtraction");
+
+    checkStartReady();
+  }
+
+  function checkStartReady() {
+    startBtn.disabled = !(selectedIcon && selectedMode);
+  }
+
+  function startGame() {
+    score = 0;
+    scoreDisplay.textContent = score;
+
+    homeScreen.classList.remove("active");
+    gameScreen.classList.add("active");
+
+    modeLabel.textContent = selectedMode === "addition" ? "Addition" : "Subtraction";
+
+    buildTensFrame();
+    buildAnswerChoices();
+    newProblem();
+  }
+
+  function goHome() {
+    gameScreen.classList.remove("active");
+    homeScreen.classList.add("active");
+  }
+
+  function buildTensFrame() {
+    tensFrame.innerHTML = "";
+
+    for (let i = 0; i < 10; i++) {
+      const cell = document.createElement("div");
+      cell.className = "frame-cell";
+      cell.onclick = () => toggleCell(cell);
+      tensFrame.appendChild(cell);
+    }
+  }
+
+  function toggleCell(cell) {
+    if (cell.classList.contains("filled")) {
+      cell.classList.remove("filled");
+      cell.textContent = "";
+    } else {
+      cell.classList.add("filled");
+      cell.textContent = selectedIcon;
+    }
+  }
+
+  function clearTensFrame() {
+    document.querySelectorAll(".frame-cell").forEach(cell => {
+      cell.classList.remove("filled");
+      cell.textContent = "";
+    });
+  }
+
+  function buildAnswerChoices() {
+    answerGrid.innerHTML = "";
+
+    for (let i = 1; i <= 10; i++) {
+      const button = document.createElement("button");
+      button.className = "answer-btn";
+      button.textContent = i;
+      button.onclick = () => checkAnswer(i);
+      answerGrid.appendChild(button);
+    }
+  }
+
+  function newProblem() {
+    answered = false;
+    nextBtn.classList.remove("show");
+    clearTensFrame();
+
+    let a;
+    let b;
+
+    if (selectedMode === "addition") {
+      a = randomNumber(1, 9);
+      b = randomNumber(1, 10 - a);
+      currentAnswer = a + b;
+      problemText.textContent = `${a} + ${b} = ____`;
+    } else {
+      a = randomNumber(2, 10);
+      b = randomNumber(1, a - 1);
+      currentAnswer = a - b;
+      problemText.textContent = `${a} - ${b} = ____`;
+    }
+  }
+
+  function checkAnswer(choice) {
+    if (answered) return;
+
+    answered = true;
+
+    if (choice === currentAnswer) {
+      score++;
+      scoreDisplay.textContent = score;
+      showFeedback("⭐", "star");
+    } else {
+      showFeedback("✖", "wrong");
+    }
+
+    setTimeout(() => {
+      nextBtn.classList.add("show");
+    }, 700);
+  }
+
+  function showFeedback(symbol, type) {
+    feedback.textContent = symbol;
+    feedback.className = `feedback ${type} show`;
+
+    setTimeout(() => {
+      feedback.className = "feedback";
+      feedback.textContent = "";
+    }, 800);
+  }
+
+  function randomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  buildIconChoices();
+</script>
+</body>
+</html>
